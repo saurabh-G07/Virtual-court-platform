@@ -176,5 +176,42 @@ The application will be securely hosted at `http://localhost:3000`.
 
 ---
 
+## ⚖️ User Journey Guide
+
+Follow this sequence to experience the full courtroom workflow:
+
+1. **The Judge's Setup**:
+   - Register/Login and navigate to the **Dashboard**.
+   - Click **"Create New Meeting"** and set the case title and schedule.
+   - Copy the unique **Meeting ID** and share it with participants.
+2. **Joining the Session**:
+   - Participants (Lawyers, Witnesses) login and enter the **Meeting ID** to join the lobby.
+   - The Judge receives a real-time notification via Socket.io and clicks **"Admit"** to let them into the courtroom.
+3. **Presenting Evidence**:
+   - A Lawyer clicks **"Upload Exhibit"** to securely encrypt a document into the Vault.
+   - Once admitted, the Lawyer selects the exhibit to **Share with Court**.
+   - All participants see the watermarked, decrypted version in real-time.
+4. **AI Transcription**:
+   - Once the Judge ends the session, the **AI Stenographer** automatically processes the transcript.
+   - A downloadable **Case Summary** appears in the "Past Meetings" section after a few seconds.
+
+---
+
+## 🛠️ Troubleshooting
+
+### MySQL Connection Issues
+- **Error**: `ECONNREFUSED` or `Access denied for user`.
+- **Solution**: Ensure your MySQL service is running and the credentials in your `server/.env` exactly match your local database configuration. Run `CREATE DATABASE virtual_court;` before starting the server.
+
+### Socket.io / Media Failures
+- **Error**: Video/Audio not connecting between participants.
+- **Solution**: Since this uses a P2P Mesh network, ensure your firewall is not blocking UDP ports. If testing on the same machine, use two different browser profiles or Incognito mode to avoid session conflicts.
+
+### AI Summary Not Generating
+- **Error**: `401 Unauthorized` or empty summary.
+- **Solution**: Verify your `GROK_API_KEY` is active and correctly pasted in the `.env` file. Check the server console for LLM rate-limiting logs.
+
+---
+
 ## 🛡️ Security & Compliance
 This system enforces strict access policies. Attempting to bypass the Express.js Gateway directly to the Vault will result in immediate rejection. All JWT tokens are actively monitored, and the system implements rapid token invalidation upon role-change or session termination.
