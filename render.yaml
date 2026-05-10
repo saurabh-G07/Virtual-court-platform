@@ -19,6 +19,11 @@ services:
         generateValue: true
       - key: GROK_API_KEY
         sync: false # Set this manually in the Render dashboard
+      - key: CLIENT_URL
+        fromService:
+          type: web
+          name: virtual-court-client
+          property: host
 
   # 🖥️ Virtual Court Frontend (React SPA)
   - type: web

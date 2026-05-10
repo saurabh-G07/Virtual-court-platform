@@ -8,9 +8,20 @@ const { setupSocketHandlers } = require('./websocket/socketHandlers');
 const server = http.createServer(app);
 
 // Initialize Socket.IO
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:3000'
+].filter(Boolean).map(o => o.startsWith('http') ? o : `https://${o}`);
+
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true
   }
