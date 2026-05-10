@@ -42,6 +42,8 @@ Our platform adheres to a strict microservice-inspired architecture, decoupling 
 * **Backend Gateway**: Express.js REST API with JWT-based gatekeeper authentication.
 * **Persistence Layer**: MySQL with Sequelize ORM for transactional consistency.
 
+![System Architecture](./architecture%20diagram.png)
+
 *(A complete architectural diagram is available within the project documentation)*
 
 ---
