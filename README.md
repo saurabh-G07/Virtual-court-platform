@@ -238,6 +238,28 @@ Follow this sequence to experience the full courtroom workflow:
 
 ---
 
+## 🚀 Deployment (Render One-Click)
+
+The project includes a **Render Blueprint** (`render.yaml`) for seamless deployment.
+
+### 1. Simple Deployment
+1. Push your code to a GitHub repository.
+2. Log in to [Render](https://render.com).
+3. Click **"Blueprints"** ➜ **"New Blueprint Instance"**.
+4. Select your repository.
+5. Render will automatically detect the `render.yaml` and spin up:
+   - **MySQL Database**
+   - **Node.js API Server** (with Socket.io support)
+   - **Static React Frontend**
+
+### 2. Environment Setup (Render Dashboard)
+Once the blueprint starts, you will need to add your **Grok API Key** manually:
+1. Go to your **virtual-court-server** service on Render.
+2. Navigate to **Environment**.
+3. Add the key: `GROK_API_KEY` = `your_actual_key`.
+
+---
+
 ## 🗺️ Roadmap & Future Scaling
 
 While the current version provides a robust foundation for virtual proceedings, the following enhancements are planned for production scaling:
