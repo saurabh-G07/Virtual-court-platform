@@ -238,5 +238,24 @@ Follow this sequence to experience the full courtroom workflow:
 
 ---
 
+## 🗺️ Roadmap & Future Scaling
+
+While the current version provides a robust foundation for virtual proceedings, the following enhancements are planned for production scaling:
+
+### 📡 Enterprise Media Handling
+* **Transition from P2P Mesh to SFU**: Implementation of a Selective Forwarding Unit (e.g., LiveKit or MediaSoup) to support high-density courtrooms with 50+ simultaneous participants.
+* **Network-Aware Adaptive Bitrate**: Dynamic quality adjustment based on participant bandwidth to ensure critical audio remains uninterrupted.
+
+### 🗄️ Compliant Storage & Verification
+* **Cloud Vault Migration**: Transitioning local encryption to S3-compatible cloud buckets.
+* **WORM Policies**: Implementing "Write Once, Read Many" (WORM) policies for production evidence to ensure tamper-proof data retention as per legal compliance standards.
+* **On-Chain Audit Trails**: Anchoring sensitive audit log hashes to a private blockchain for verifiable integrity.
+
+### 🧠 Advanced Intelligence
+* **Multi-Language Transcription**: Real-time translation and transcription for cross-border or multilingual judicial sessions.
+* **Sentiment & Intent Analysis**: AI-driven analysis to assist in detecting non-verbal cues during witness testimony.
+
+---
+
 ## 🛡️ Security & Compliance
 This system enforces strict access policies. Attempting to bypass the Express.js Gateway directly to the Vault will result in immediate rejection. All JWT tokens are actively monitored, and the system implements rapid token invalidation upon role-change or session termination.
