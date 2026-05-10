@@ -95,7 +95,10 @@ exports.getMeetingById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const meeting = await Meeting.findByPk(id, {
+    const whereClause = isNaN(id) ? { roomId: id } : { [Op.or]: [{ id: id }, { roomId: id }] };
+    
+    const meeting = await Meeting.findOne({
+      where: whereClause,
       include: [
         { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
         { model: User, as: 'participants', attributes: ['id', 'name', 'email'], through: { attributes: [] } }
@@ -106,13 +109,9 @@ exports.getMeetingById = async (req, res) => {
       return res.status(404).json({ message: 'Meeting not found' });
     }
     
-    // Check if user is authorized to view this meeting
-    const isCreator = meeting.createdBy === req.userId;
-    const isParticipant = meeting.participants.some(p => p.id === req.userId);
-    
-    if (!isCreator && !isParticipant) {
-      return res.status(403).json({ message: 'Not authorized to view this meeting' });
-    }
+    // Allow all authenticated users to fetch meeting details so they can enter the waiting room.
+    // The Socket.io layer and React frontend will enforce the waiting room and admission logic.
+    // (Bypassed creator/participant check to allow witnesses/clients to join via URL)
     
     res.status(200).json({ meeting });
   } catch (error) {

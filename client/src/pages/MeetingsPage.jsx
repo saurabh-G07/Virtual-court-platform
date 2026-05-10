@@ -80,116 +80,121 @@ const MeetingsPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Court Sessions</h1>
-        <Link 
-          to="/meetings/create" 
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-        >
-          Schedule New Session
-        </Link>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-4 border-b flex justify-between items-center">
-          <div className="flex space-x-2">
-            <button 
-              className={`px-3 py-1 rounded-md ${filter === 'all' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100'}`}
-              onClick={() => setFilter('all')}
-            >
-              All
-            </button>
-            <button 
-              className={`px-3 py-1 rounded-md ${filter === 'upcoming' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100'}`}
-              onClick={() => setFilter('upcoming')}
-            >
-              Upcoming
-            </button>
-            <button 
-              className={`px-3 py-1 rounded-md ${filter === 'past' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100'}`}
-              onClick={() => setFilter('past')}
-            >
-              Past
-            </button>
+    <div className="min-h-screen bg-slate-900 font-serif text-slate-100 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700 mr-4">
+              <span className="text-2xl text-amber-500">📁</span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-amber-500 uppercase tracking-widest">Official Docket</h1>
           </div>
+          <Link 
+            to="/meetings/create" 
+            className="px-6 py-3 bg-amber-700 text-white font-bold uppercase tracking-wider rounded hover:bg-amber-600 transition-colors shadow-lg"
+          >
+            Schedule Hearing
+          </Link>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="bg-slate-950 rounded-xl shadow-2xl border-l-4 border-amber-600 overflow-hidden">
+          <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+            <div className="flex space-x-3">
+              <button 
+                className={`px-4 py-2 rounded font-bold uppercase tracking-wider text-xs transition-colors ${filter === 'all' ? 'bg-amber-900 text-amber-100 border border-amber-700' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                onClick={() => setFilter('all')}
+              >
+                All Hearings
+              </button>
+              <button 
+                className={`px-4 py-2 rounded font-bold uppercase tracking-wider text-xs transition-colors ${filter === 'upcoming' ? 'bg-amber-900 text-amber-100 border border-amber-700' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                onClick={() => setFilter('upcoming')}
+              >
+                Upcoming
+              </button>
+              <button 
+                className={`px-4 py-2 rounded font-bold uppercase tracking-wider text-xs transition-colors ${filter === 'past' ? 'bg-amber-900 text-amber-100 border border-amber-700' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                onClick={() => setFilter('past')}
+              >
+                Past Records
+              </button>
+            </div>
           </div>
-        ) : filteredMeetings().length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Subject
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Start Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    End Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredMeetings().map((meeting) => (
-                  <tr key={meeting.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{meeting.subject}</div>
-                      <div className="text-sm text-gray-500">Room ID: {meeting.roomId}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{formatDate(meeting.startTime)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{formatDate(meeting.endTime)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(meeting.status)}`}>
-                        {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <Link 
-                          to={`/room/${meeting.roomId}`}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          Join
-                        </Link>
-                        {meeting.createdBy === currentUser.id && (
-                          <>
-                            <span className="text-gray-300">|</span>
+
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500"></div>
+            </div>
+          ) : filteredMeetings().length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-800">
+                <thead className="bg-slate-900">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-amber-600 uppercase tracking-widest">
+                      Case Details
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-amber-600 uppercase tracking-widest">
+                      Start Time
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-amber-600 uppercase tracking-widest">
+                      End Time
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-amber-600 uppercase tracking-widest">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-amber-600 uppercase tracking-widest">
+                      Court Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-slate-950 divide-y divide-slate-800">
+                  {filteredMeetings().map((meeting) => (
+                    <tr key={meeting.id} className="hover:bg-slate-900 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-slate-200">{meeting.subject}</div>
+                        <div className="text-xs text-slate-500 font-mono mt-1">ID: {meeting.roomId}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-slate-400">{formatDate(meeting.startTime)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-slate-400">{formatDate(meeting.endTime)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 inline-flex text-xs font-bold uppercase tracking-wider rounded border ${getStatusClass(meeting.status).replace('bg-', 'bg-opacity-20 bg-').replace('text-', 'text-')}`}>
+                          {meeting.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-4">
+                          <Link 
+                            to={`/room/${meeting.roomId}`}
+                            className="text-blue-400 font-bold hover:text-blue-300 uppercase tracking-wider text-xs border border-blue-900 px-2 py-1 rounded"
+                          >
+                            Enter Room
+                          </Link>
+                          {meeting.createdBy === currentUser.id && (
                             <button 
                               onClick={() => deleteMeeting(meeting.id)}
-                              className="text-red-600 hover:text-red-900"
+                              className="text-red-500 font-bold hover:text-red-400 uppercase tracking-wider text-xs border border-red-900 px-2 py-1 rounded"
                             >
-                              Delete
+                              Strike
                             </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            No court sessions found.
-          </div>
-        )}
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-16 text-slate-500 flex flex-col items-center">
+              <span className="text-4xl mb-4 text-slate-700">⚖️</span>
+              <p className="text-lg">No court sessions found in the current filter.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

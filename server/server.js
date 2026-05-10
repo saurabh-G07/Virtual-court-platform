@@ -23,7 +23,14 @@ setupSocketHandlers(io);
 db.authenticate()
   .then(() => {
     console.log('Database connection established successfully.');
-    return db.sync();
+    // Require models to ensure they are registered before sync
+    require('./models/user.model');
+    require('./models/meeting.model');
+    require('./models/message.model');
+    require('./models/evidence.model');
+    require('./models/auditLog.model');
+    
+    return db.sync({ alter: true }); // alter: true will update existing tables without dropping them
   })
   .then(() => {
     console.log('Database synchronized successfully.');
@@ -37,3 +44,4 @@ const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+// Restart trigger for JWT_SECRET

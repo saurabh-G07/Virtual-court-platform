@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Court Platform - System Architecture</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    background-color: #f8fafc;
+    color: #1e293b;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .header {
+    position: absolute;
+    top: 30px; left: 40px;
+    background: linear-gradient(135deg, #0f172a, #334155);
+    padding: 15px 30px;
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.3);
+    z-index: 10;
+  }
+  .header-subtitle {
+    color: #d97706; /* Amber 600 */
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+  .canvas-wrapper {
+    width: 100%;
+    max-width: 1750px;
+    display: flex;
+    justify-content: center;
+    padding-top: 40px;
+  }
+  .canvas {
+    position: relative;
+    width: 1700px;
+    height: 950px;
+    transform-origin: top center;
+  }
+
+  /* Responsive Scaling to perfectly fit on ONE page */
+  @media (max-width: 1800px) {
+    .canvas { transform: scale(0.85); margin-bottom: -140px; }
+  }
+  @media (max-width: 1500px) {
+    .canvas { transform: scale(0.75); margin-bottom: -230px; }
+  }
+  @media (max-width: 1300px) {
+    .canvas { transform: scale(0.65); margin-bottom: -330px; }
+  }
+  @media (max-width: 1100px) {
+    .canvas { transform: scale(0.55); margin-bottom: -420px; }
+  }
+
+  svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    pointer-events: none;
+  }
+  
+  /* Bounding Boxes */
+  .group-box {
+    position: absolute;
+    border: 2px dashed rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.6);
+    z-index: 1;
+    box-sizing: border-box;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+  }
+  .group-title {
+    position: absolute;
+    top: -14px;
+    left: 25px;
+    background: #f8fafc;
+    padding: 0 12px;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
+  }
+
+  /* Nodes */
+  .node {
+    position: absolute;
+    width: 200px; height: 100px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 3;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    border: 2px solid;
+    text-align: center;
+    padding: 10px;
+    box-sizing: border-box;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(145deg, #ffffff, #f1f5f9);
+  }
+  .node:hover {
+    transform: translateY(-6px) scale(1.04);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+    z-index: 10;
+  }
+  .icon img {
+    width: 28px; height: 28px;
+    margin-bottom: 6px;
+  }
+  .title { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; color: #0f172a; }
+  .desc { font-size: 12px; color: #475569; margin-top: 4px; font-weight: 500; line-height: 1.3; }
+  
+  /* Theming nodes */
+  .judge { border-color: #8b5cf6; left: 60px; top: 200px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15); }
+  .lawyer { border-color: #3b82f6; left: 60px; top: 400px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15); }
+  .witness { border-color: #10b981; left: 60px; top: 600px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15); }
+  
+  .react { border-color: #06b6d4; left: 400px; top: 400px; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.15); }
+  .webrtc { border-color: #f59e0b; left: 400px; top: 720px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15); }
+  
+  .signal { border-color: #ec4899; left: 740px; top: 200px; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.15); }
+  .rest { border-color: #3b82f6; left: 740px; top: 400px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15); }
+  
+  .security { border-color: #ef4444; left: 1080px; top: 300px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15); }
+  .grok { border-color: #8b5cf6; left: 1080px; top: 500px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15); }
+  
+  .vault { border-color: #64748b; left: 1420px; top: 300px; box-shadow: 0 4px 15px rgba(100, 116, 139, 0.15); }
+  .db { border-color: #f97316; left: 1420px; top: 500px; box-shadow: 0 4px 15px rgba(249, 115, 22, 0.15); }
+  
+  /* Labels */
+  .label {
+    position: absolute;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 4;
+    background: #ffffff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  
+  /* Annotation Box */
+  .annotation {
+    position: absolute;
+    background: rgba(217, 119, 6, 0.08); /* Amber 600 tint */
+    border-left: 3px solid #d97706;
+    padding: 15px;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.6;
+    border-radius: 0 8px 8px 0;
+    z-index: 3;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+  }
+
+  /* Animated Lines */
+  @keyframes flow {
+    from { stroke-dashoffset: 24; }
+    to { stroke-dashoffset: 0; }
+  }
+  .flow-line {
+    stroke-dasharray: 6 6;
+    animation: flow 0.8s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  Virtual Court Platform
+  <div class="header-subtitle">Enterprise System Design</div>
+</div>
+
+<div class="canvas-wrapper">
+<div class="canvas">
+  
+  <!-- Grouping Containers -->
+  <div class="group-box" style="left: 40px; top: 150px; width: 240px; height: 580px;">
+    <div class="group-title">Client Roles</div>
+  </div>
+  <div class="group-box" style="left: 380px; top: 350px; width: 240px; height: 180px;">
+    <div class="group-title">Frontend Application</div>
+  </div>
+  <div class="group-box" style="left: 380px; top: 670px; width: 240px; height: 180px;">
+    <div class="group-title">Media Plane</div>
+  </div>
+  <div class="group-box" style="left: 720px; top: 150px; width: 240px; height: 380px;">
+    <div class="group-title">Backend & Orchestration</div>
+  </div>
+  <div class="group-box" style="left: 1060px; top: 250px; width: 240px; height: 380px;">
+    <div class="group-title">Intelligence & Security</div>
+  </div>
+  <div class="group-box" style="left: 1400px; top: 250px; width: 240px; height: 380px;">
+    <div class="group-title">Persistence</div>
+  </div>
+
+  <svg>
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/></marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444"/></marker>
+      <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/></marker>
+      <marker id="arrow-pink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ec4899"/></marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6"/></marker>
+      <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/></marker>
+      <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#06b6d4"/></marker>
+      <marker id="arrow-orange2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316"/></marker>
+    </defs>
+    
+    <!-- Clients to React SPA -->
+    <path d="M 260 250 L 320 250 L 320 430 L 390 430" stroke="#06b6d4" stroke-width="2.5" fill="none" marker-end="url(#arrow-cyan)"/>
+    <path d="M 260 450 L 390 450" stroke="#06b6d4" stroke-width="2.5" fill="none" marker-end="url(#arrow-cyan)"/>
+    <path d="M 260 650 L 320 650 L 320 470 L 390 470" stroke="#06b6d4" stroke-width="2.5" fill="none" marker-end="url(#arrow-cyan)"/>
+    
+    <!-- Clients to WebRTC Media (Video Streaming) -->
+    <path class="flow-line" d="M 160 300 L 160 770 L 390 770" stroke="#f59e0b" stroke-width="2.5" fill="none" marker-end="url(#arrow-orange)"/>
+    <path class="flow-line" d="M 260 470 L 290 470 L 290 750 L 390 750" stroke="#f59e0b" stroke-width="2.5" fill="none" marker-end="url(#arrow-orange)"/>
+    <path class="flow-line" d="M 260 670 L 290 670 L 290 790 L 390 790" stroke="#f59e0b" stroke-width="2.5" fill="none" marker-end="url(#arrow-orange)"/>
+    
+    <!-- React SPA to Signal Server (WebSockets) -->
+    <path d="M 600 420 L 670 420 L 670 250 L 730 250" stroke="#ec4899" stroke-width="2.5" fill="none" marker-end="url(#arrow-pink)"/>
+    <path class="flow-line" d="M 740 270 L 640 270 L 640 440 L 610 440" stroke="#ec4899" stroke-width="2.5" fill="none" marker-end="url(#arrow-pink)"/>
+
+    <!-- React SPA to REST API -->
+    <path d="M 600 460 L 730 460" stroke="#3b82f6" stroke-width="2.5" fill="none" marker-end="url(#arrow-blue)"/>
+    <path class="flow-line" d="M 740 480 L 610 480" stroke="#3b82f6" stroke-width="2.5" fill="none" marker-end="url(#arrow-blue)"/>
+
+    <!-- REST API to Security Engine -->
+    <path d="M 940 430 L 1010 430 L 1010 350 L 1070 350" stroke="#ef4444" stroke-width="2.5" fill="none" marker-end="url(#arrow-red)"/>
+    
+    <!-- REST API to Grok AI -->
+    <path d="M 940 470 L 1010 470 L 1010 550 L 1070 550" stroke="#8b5cf6" stroke-width="2.5" fill="none" marker-end="url(#arrow-purple)"/>
+
+    <!-- Signal Server to Grok AI (Triggers summary on disconnect) -->
+    <path class="flow-line" d="M 940 220 L 1320 220 L 1320 530 L 1290 530" stroke="#8b5cf6" stroke-width="2" fill="none" marker-end="url(#arrow-purple)"/>
+
+    <!-- Signal Server to Database -->
+    <path class="flow-line" d="M 940 240 L 1520 240 L 1520 490" stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arrow-orange2)"/>
+
+    <!-- REST API to Database -->
+    <path d="M 940 490 L 980 490 L 980 660 L 1520 660 L 1520 610" stroke="#f97316" stroke-width="2.5" fill="none" marker-end="url(#arrow-orange2)"/>
+
+    <!-- Security Engine to Vault -->
+    <path d="M 1280 340 L 1410 340" stroke="#64748b" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+    <path d="M 1420 360 L 1290 360" stroke="#64748b" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+
+    <!-- Grok AI to Database -->
+    <path class="flow-line" d="M 1280 550 L 1410 550" stroke="#f97316" stroke-width="2.5" fill="none" marker-end="url(#arrow-orange2)"/>
+
+  </svg>
+  
+  <!-- Nodes -->
+  <div class="node judge">
+    <div class="icon"><img src="https://cdn.simpleicons.org/scales/8b5cf6" alt="⚖️" onerror="this.outerHTML='⚖️'"></div>
+    <div class="title">Hon. Judge</div>
+    <div class="desc">Admission Control<br>Mute/Eject Powers</div>
+  </div>
+  
+  <div class="node lawyer">
+    <div class="icon"><img src="https://cdn.simpleicons.org/briefcase/3b82f6" alt="💼" onerror="this.outerHTML='💼'"></div>
+    <div class="title">Lawyer / Counsel</div>
+    <div class="desc">Evidence Presentation<br>Session Scheduling</div>
+  </div>
+  
+  <div class="node witness">
+    <div class="icon"><img src="https://cdn.simpleicons.org/microphonestand/10b981" alt="🎙️" onerror="this.outerHTML='🎙️'"></div>
+    <div class="title">Witness</div>
+    <div class="desc">Waiting Room Lobby<br>View Exhibits</div>
+  </div>
+  
+  <div class="node react">
+    <div class="icon"><img src="https://cdn.simpleicons.org/react/06b6d4" alt="⚛️" onerror="this.outerHTML='⚛️'"></div>
+    <div class="title">Courtroom SPA</div>
+    <div class="desc">Slate & Gold Theme<br>Role-based Rendering</div>
+  </div>
+  
+  <div class="node webrtc">
+    <div class="icon"><img src="https://cdn.simpleicons.org/webrtc/f59e0b" alt="🎥" onerror="this.outerHTML='🎥'"></div>
+    <div class="title">Media Mesh</div>
+    <div class="desc">P2P Audio / Video<br>Screen Sharing</div>
+  </div>
+  
+  <div class="node signal">
+    <div class="icon"><img src="https://cdn.simpleicons.org/socketdotio/ec4899" alt="⚡" onerror="this.outerHTML='⚡'"></div>
+    <div class="title">Signal Server</div>
+    <div class="desc">WebSockets<br>Waiting Room State</div>
+  </div>
+  
+  <div class="node rest">
+    <div class="icon"><img src="https://cdn.simpleicons.org/nodedotjs/3b82f6" alt="🚀" onerror="this.outerHTML='🚀'"></div>
+    <div class="title">API Gateway</div>
+    <div class="desc">Express.js<br>JWT Authentication</div>
+  </div>
+  
+  <div class="node security">
+    <div class="icon"><img src="https://cdn.simpleicons.org/springsecurity/ef4444" alt="🔐" onerror="this.outerHTML='🔐'"></div>
+    <div class="title">Security Engine</div>
+    <div class="desc">AES-256 Encryption<br>Jimp Watermarking</div>
+  </div>
+  
+  <div class="node grok">
+    <div class="icon"><img src="https://cdn.simpleicons.org/openai/8b5cf6" alt="🤖" onerror="this.outerHTML='🤖'"></div>
+    <div class="title">AI Stenographer</div>
+    <div class="desc">Grok LLM API<br>Case Summarization</div>
+  </div>
+  
+  <div class="node vault">
+    <div class="icon"><img src="https://cdn.simpleicons.org/files/64748b" alt="📁" onerror="this.outerHTML='📁'"></div>
+    <div class="title">Encrypted Vault</div>
+    <div class="desc">Local Disk Storage<br>No Public Access</div>
+  </div>
+  
+  <div class="node db">
+    <div class="icon"><img src="https://cdn.simpleicons.org/mysql/f97316" alt="💾" onerror="this.outerHTML='💾'"></div>
+    <div class="title">MySQL Database</div>
+    <div class="desc">Sequelize ORM<br>Immutable Audit Logs</div>
+  </div>
+  
+  <!-- Edge Labels positioned perfectly in whitespace to avoid overlaps -->
+  <div class="label" style="left: 285px; top: 415px; border-color: #a5f3fc; color: #0891b2;">HTTP / TLS</div>
+  <div class="label" style="left: 200px; top: 810px; border-color: #fde68a; color: #d97706;">Live UDP</div>
+  
+  <div class="label" style="left: 685px; top: 310px; border-color: #fbcfe8; color: #db2777;">WS Events</div>
+  <div class="label" style="left: 625px; top: 495px; border-color: #bfdbfe; color: #2563eb;">REST JSON</div>
+  
+  <div class="label" style="left: 1015px; top: 380px; border-color: #fecaca; color: #dc2626;">/view & /upload</div>
+  <div class="label" style="left: 1015px; top: 500px; border-color: #ddd6fe; color: #7c3aed;">Generate Summary</div>
+  
+  <div class="label" style="left: 1290px; top: 380px; border-color: #cbd5e1; color: #475569;">Buffer Read/Write</div>
+  
+  <!-- Special Annotations -->
+  <div class="annotation" style="left: 40px; top: 800px; width: 280px;">
+    <div style="color: #d97706; font-weight: 800; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Key Mechanisms</div>
+    <div>&bull; Mesh Network removes central point of failure for media.</div>
+    <div>&bull; Wait Room logic strictly handled via Socket.io orchestration.</div>
+    <div>&bull; Evidence decrypted entirely in-memory prior to viewing.</div>
+    <div>&bull; Audit Logs capture millisecond precision on all endpoints.</div>
+  </div>
+
+</div>
+</div>
+
+</body>
+</html>

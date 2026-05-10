@@ -39,6 +39,18 @@ const Meeting = sequelize.define('Meeting', {
   status: {
     type: DataTypes.ENUM('scheduled', 'ongoing', 'completed', 'cancelled'),
     defaultValue: 'scheduled'
+  },
+  isWaitingRoomEnabled: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
+  },
+  transcriptText: {
+    type: DataTypes.TEXT('long'),
+    allowNull: true
+  },
+  caseSummary: {
+    type: DataTypes.TEXT,
+    allowNull: true
   }
 });
 

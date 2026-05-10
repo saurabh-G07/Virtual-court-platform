@@ -11,7 +11,7 @@ exports.setupSocketHandlers = (io) => {
     
     // Join a room
     socket.on('join-room', async (data) => {
-      const { roomId, userId, userName } = data;
+      const { roomId, userId, userName, role } = data;
       
       // Join the room
       socket.join(roomId);
@@ -20,6 +20,7 @@ exports.setupSocketHandlers = (io) => {
       connectedUsers.set(socket.id, {
         userId,
         userName,
+        role,
         roomId
       });
       
@@ -33,7 +34,8 @@ exports.setupSocketHandlers = (io) => {
       socket.to(roomId).emit('user-connected', {
         socketId: socket.id,
         userId,
-        userName
+        userName,
+        role
       });
       
       // Send list of connected users to the new user
@@ -43,7 +45,8 @@ exports.setupSocketHandlers = (io) => {
           usersInRoom.push({
             socketId: id,
             userId: user.userId,
-            userName: user.userName
+            userName: user.userName,
+            role: user.role
           });
         }
       }
@@ -57,6 +60,23 @@ exports.setupSocketHandlers = (io) => {
         from: socket.id,
         signal
       });
+    });
+
+    // Evidence sync
+    socket.on('present-evidence', (data) => {
+      const { roomId, evidence } = data;
+      streamNamespace.to(roomId).emit('evidence-presented', evidence);
+    });
+
+    // Waiting Room logic
+    socket.on('request-join', (data) => {
+      const { roomId, userId, userName, role } = data;
+      streamNamespace.to(roomId).emit('join-request', { socketId: socket.id, userId, userName, role });
+    });
+
+    socket.on('admit-user', (data) => {
+      const { socketId } = data;
+      streamNamespace.to(socketId).emit('admitted');
     });
     
     // Handle chat messages
@@ -102,6 +122,28 @@ exports.setupSocketHandlers = (io) => {
         const roomClients = await streamNamespace.in(roomId).fetchSockets();
         if (roomClients.length === 0) {
           await updateMeetingStatus(roomId, 'completed');
+          
+          try {
+            // Trigger AI Summarization via Grok
+            const grokService = require('../services/grok.service');
+            const Message = require('../models/message.model');
+            const Meeting = require('../models/meeting.model');
+            
+            const messages = await Message.findAll({
+              where: { roomId },
+              order: [['timestamp', 'ASC']]
+            });
+            
+            if (messages.length > 0) {
+              const transcript = messages.map(m => `${m.senderName}: ${m.message}`).join('\n');
+              const summary = await grokService.summarizeCase(transcript);
+              
+              await Meeting.update({ caseSummary: summary, transcriptText: transcript }, { where: { roomId } });
+              console.log(`AI Summary generated for room ${roomId}`);
+            }
+          } catch (error) {
+            console.error('Error generating AI summary:', error);
+          }
         }
       }
       

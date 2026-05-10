@@ -6,43 +6,46 @@ const HomePage = () => {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="bg-gray-50">
-      {/* Hero Section with improved overlay and styling */}
-      <div className="relative bg-indigo-900">
+    <div className="bg-slate-900 min-h-screen font-serif text-slate-100">
+      {/* Hero Section */}
+      <div className="relative bg-slate-950 border-b-2 border-amber-600">
         <div className="absolute inset-0">
           <img 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-20"
             src="/images/Supreme-Court-of-India (2).jpg"
             alt="Supreme Court"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/90 to-indigo-600/70" aria-hidden="true"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 to-slate-900/70" aria-hidden="true"></div>
         </div>
-        <div className="relative max-w-7xl mx-auto py-32 px-4 sm:py-40 sm:px-6 lg:px-8">
-          <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl drop-shadow-md">
+        <div className="relative max-w-7xl mx-auto py-32 px-4 sm:py-40 sm:px-6 lg:px-8 flex flex-col items-center text-center">
+          <div className="w-20 h-20 bg-amber-700 rounded-full flex items-center justify-center border-4 border-amber-400 mb-6 shadow-2xl">
+            <span className="text-4xl font-bold">🏛️</span>
+          </div>
+          <h1 className="text-5xl font-extrabold tracking-widest text-amber-500 uppercase sm:text-6xl lg:text-7xl drop-shadow-md">
             Virtual Court
           </h1>
-          <p className="mt-6 text-xl text-indigo-100 max-w-3xl leading-relaxed drop-shadow-sm">
-            A secure platform for conducting virtual court sessions, legal consultations, and case management with end-to-end encryption and professional tools.
+          <p className="mt-6 text-xl text-slate-300 max-w-3xl leading-relaxed drop-shadow-sm border-t border-b border-slate-700 py-4">
+            A secure, professional platform for conducting official virtual court sessions, evidence presentation, and case management with AI-powered stenography.
           </p>
-          <div className="mt-10 flex flex-wrap gap-4">
+          <div className="mt-10 flex flex-wrap gap-4 justify-center">
             {isAuthenticated ? (
               <Link
                 to="/dashboard"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 transition-all duration-300 transform hover:-translate-y-1"
+                className="inline-flex items-center px-8 py-3 border border-transparent text-lg font-bold rounded shadow-lg text-amber-950 bg-amber-500 hover:bg-amber-400 transition-all duration-300 uppercase tracking-wider"
               >
-                Go to Dashboard
+                Enter Chambers
               </Link>
             ) : (
               <>
                 <Link
                   to="/register"
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 transition-all duration-300 transform hover:-translate-y-1"
+                  className="inline-flex items-center px-8 py-3 border border-transparent text-lg font-bold rounded shadow-lg text-amber-950 bg-amber-500 hover:bg-amber-400 transition-all duration-300 uppercase tracking-wider"
                 >
-                  Get Started
+                  Register Appearance
                 </Link>
                 <Link
                   to="/login"
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-500 bg-opacity-60 hover:bg-opacity-80 transition-all duration-300"
+                  className="inline-flex items-center px-8 py-3 border border-slate-600 text-lg font-bold rounded text-slate-100 bg-slate-800 hover:bg-slate-700 transition-all duration-300 uppercase tracking-wider"
                 >
                   Sign In
                 </Link>
@@ -52,140 +55,45 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Features Section with improved layout */}
-      <div className="py-16 bg-white">
+      {/* Features Section */}
+      <div className="py-16 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">FEATURES</h2>
-            <p className="mt-2 text-4xl font-extrabold text-gray-900 sm:text-5xl">
-              A better way to conduct court proceedings
-            </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-              Our platform provides all the tools needed for effective virtual court sessions and legal consultations.
+            <h2 className="text-base text-amber-500 font-bold tracking-widest uppercase">The Court Record</h2>
+            <p className="mt-2 text-4xl font-extrabold text-slate-100 sm:text-5xl font-serif">
+              A highly formalized legal environment
             </p>
           </div>
 
           <div className="mt-16">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {/* Feature 1 */}
-              <div className="relative bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
-                <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                  <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">HD Video Conferencing</h3>
-                <p className="mt-2 text-base text-gray-500">
-                  Conduct court sessions with high-definition video and crystal-clear audio for all participants.
+              <div className="relative bg-slate-950 p-6 rounded-lg shadow-xl border-t-4 border-amber-600 hover:border-amber-400 transition-all duration-300">
+                <h3 className="text-xl font-bold text-amber-500 uppercase tracking-wide">Roles & Order</h3>
+                <p className="mt-4 text-base text-slate-400">
+                  Dedicated privileges for Judges, Clerks, Lawyers, and Witnesses to maintain courtroom decorum.
                 </p>
               </div>
 
-              {/* Feature 2 */}
-              <div className="relative bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
-                <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                  <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">Secure Communications</h3>
-                <p className="mt-2 text-base text-gray-500">
-                  End-to-end encryption ensures that all communications remain private and confidential.
+              <div className="relative bg-slate-950 p-6 rounded-lg shadow-xl border-t-4 border-amber-600 hover:border-amber-400 transition-all duration-300">
+                <h3 className="text-xl font-bold text-amber-500 uppercase tracking-wide">Evidence Management</h3>
+                <p className="mt-4 text-base text-slate-400">
+                  Lawyers and Judges can formally present documents to the floor for instant synced viewing.
                 </p>
               </div>
 
-              {/* Feature 3 */}
-              <div className="relative bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
-                <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                  <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">Smart Scheduling</h3>
-                <p className="mt-2 text-base text-gray-500">
-                  Easily schedule court sessions and manage your calendar with automated reminders.
+              <div className="relative bg-slate-950 p-6 rounded-lg shadow-xl border-t-4 border-amber-600 hover:border-amber-400 transition-all duration-300">
+                <h3 className="text-xl font-bold text-amber-500 uppercase tracking-wide">AI Stenography</h3>
+                <p className="mt-4 text-base text-slate-400">
+                  Automated integration with the Groq API to compile and summarize the official court transcript.
                 </p>
               </div>
 
-              {/* Feature 4 */}
-              <div className="relative bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
-                <div className="w-12 h-12 bg-indigo-100 rounded-md flex items-center justify-center mb-4">
-                  <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">Document Sharing</h3>
-                <p className="mt-2 text-base text-gray-500">
-                  Share and present documents during sessions for effective case management.
+              <div className="relative bg-slate-950 p-6 rounded-lg shadow-xl border-t-4 border-amber-600 hover:border-amber-400 transition-all duration-300">
+                <h3 className="text-xl font-bold text-amber-500 uppercase tracking-wide">Waiting Rooms</h3>
+                <p className="mt-4 text-base text-slate-400">
+                  Secure lobbies allowing Judges to selectively admit witnesses and plaintiffs to the floor.
                 </p>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* How It Works Section - New Addition */}
-      <div className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Process</h2>
-            <p className="mt-2 text-3xl font-extrabold text-gray-900">
-              How Virtual Court Works
-            </p>
-          </div>
-          
-          <div className="mt-12">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 text-indigo-600 text-2xl font-bold">1</div>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">Schedule a Session</h3>
-                <p className="mt-2 text-base text-gray-500">
-                  Create a new court session and invite all required participants.
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 text-indigo-600 text-2xl font-bold">2</div>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">Join the Virtual Court</h3>
-                <p className="mt-2 text-base text-gray-500">
-                  Connect via any device with a camera and microphone at the scheduled time.
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 text-indigo-600 text-2xl font-bold">3</div>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">Conduct Proceedings</h3>
-                <p className="mt-2 text-base text-gray-500">
-                  Share documents, present evidence, and record the session for future reference.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="bg-indigo-700">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            <span className="block">Ready to get started?</span>
-            <span className="block text-indigo-200">Join our platform today.</span>
-          </h2>
-          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-            <div className="inline-flex rounded-md shadow">
-              <Link
-                to={isAuthenticated ? "/dashboard" : "/register"}
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50"
-              >
-                {isAuthenticated ? "Go to Dashboard" : "Get Started"}
-              </Link>
-            </div>
-            <div className="ml-3 inline-flex rounded-md shadow">
-              <a
-                href="#"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 bg-opacity-60 hover:bg-opacity-70"
-              >
-                Learn More
-              </a>
             </div>
           </div>
         </div>

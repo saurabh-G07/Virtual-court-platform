@@ -23,6 +23,11 @@ const MeetingRoomPage = () => {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   
+  // New States
+  const [presentedEvidence, setPresentedEvidence] = useState(null);
+  const [isAdmitted, setIsAdmitted] = useState(false);
+  const [joinRequests, setJoinRequests] = useState([]);
+  
   const socketRef = useRef();
   const userVideoRef = useRef();
   const peersRef = useRef([]);
@@ -67,11 +72,34 @@ const MeetingRoomPage = () => {
           userVideoRef.current.srcObject = stream;
         }
         
-        // Join room
-        socketRef.current.emit('join-room', {
-          roomId,
-          userId: currentUser.id,
-          userName: currentUser.name
+        // Join room logic
+        if (currentUser.role === 'judge' || currentUser.role === 'clerk') {
+          socketRef.current.emit('join-room', {
+            roomId,
+            userId: currentUser.id,
+            userName: currentUser.name,
+            role: currentUser.role
+          });
+          setIsAdmitted(true);
+        } else {
+          socketRef.current.emit('request-join', {
+            roomId,
+            userId: currentUser.id,
+            userName: currentUser.name,
+            role: currentUser.role
+          });
+        }
+        
+        // Handle being admitted
+        socketRef.current.on('admitted', () => {
+          setIsAdmitted(true);
+          socketRef.current.emit('join-room', {
+            roomId,
+            userId: currentUser.id,
+            userName: currentUser.name,
+            role: currentUser.role
+          });
+          toast.success('You have been admitted to the courtroom');
         });
         
         // Handle new user connection
@@ -131,6 +159,18 @@ const MeetingRoomPage = () => {
           if (chatEndRef.current) {
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
           }
+        });
+
+        // Handle evidence
+        socketRef.current.on('evidence-presented', data => {
+          setPresentedEvidence(data);
+          toast.success('New evidence presented');
+        });
+
+        // Handle join requests (for Judge/Clerk)
+        socketRef.current.on('join-request', data => {
+          setJoinRequests(prev => [...prev, data]);
+          toast.success(`${data.userName} (${data.role}) requested to join`);
         });
       })
       .catch(error => {
@@ -304,6 +344,35 @@ const MeetingRoomPage = () => {
     }
   };
   
+  // Handle Evidence Upload
+  const handleEvidenceUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', file.name);
+    formData.append('meetingId', meeting.id);
+    
+    try {
+      const res = await api.post('/evidence/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const evidence = res.data.evidence;
+      socketRef.current.emit('present-evidence', { roomId, evidence });
+      setPresentedEvidence(evidence);
+      toast.success('Evidence presented to the court');
+    } catch (err) {
+      toast.error('Evidence upload failed');
+    }
+  };
+
+  // Admit user
+  const admitUser = (request) => {
+    socketRef.current.emit('admit-user', { socketId: request.socketId });
+    setJoinRequests(prev => prev.filter(r => r.socketId !== request.socketId));
+  };
+  
   // Send chat message
   const sendMessage = (e) => {
     e.preventDefault();
@@ -350,229 +419,228 @@ const MeetingRoomPage = () => {
       </div>
     );
   }
+
+  if (!isAdmitted) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-slate-100 font-serif">
+        <h2 className="text-3xl font-bold mb-4 text-amber-500">🏛️ Virtual Waiting Room</h2>
+        <p className="mb-6 text-xl text-center max-w-lg">Please wait until the Honorable Judge or the Court Clerk admits you to the hearing for case <strong>{meeting?.subject}</strong>.</p>
+        <div className="animate-pulse w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center text-2xl border-2 border-amber-500">⏳</div>
+      </div>
+    );
+  }
   
   return (
-    <div className="flex flex-col h-screen bg-gray-900">
-      {/* Header */}
-      <header className="bg-gray-800 text-white p-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold">{meeting?.subject || 'Virtual Court Session'}</h1>
-          <p className="text-sm text-gray-400">Room ID: {roomId}</p>
+    <div className="flex flex-col h-screen bg-slate-900 text-slate-100 font-serif">
+      {/* Header - Formal Branding */}
+      <header className="bg-slate-950 border-b-2 border-amber-500 p-4 flex justify-between items-center shadow-md">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center border-2 border-amber-300">
+            <span className="text-xl font-bold">🏛️</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-amber-50 tracking-wide uppercase">{meeting?.subject || 'Virtual Court Session'}</h1>
+            <p className="text-sm text-slate-400">Case ID: {roomId} | Hon. Presiding</p>
+          </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-4">
+          {/* Controls */}
           <button
             onClick={toggleVideo}
-            className={`p-2 rounded-full ${
-              isVideoEnabled ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'
-            } transition-colors`}
-            title={isVideoEnabled ? 'Turn off camera' : 'Turn on camera'}
+            className={`px-4 py-2 rounded font-semibold border ${
+              isVideoEnabled ? 'bg-slate-800 border-slate-600 hover:bg-slate-700' : 'bg-red-900 border-red-700 text-red-100'
+            } transition-all`}
           >
-            <svg 
-              className="h-6 w-6" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              {isVideoEnabled ? (
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" 
-                />
-              ) : (
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18" 
-                />
-              )}
-            </svg>
+            {isVideoEnabled ? '🎥 Video On' : '🚫 Video Off'}
           </button>
           
           <button
             onClick={toggleAudio}
-            className={`p-2 rounded-full ${
-              isAudioEnabled ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'
-            } transition-colors`}
-            title={isAudioEnabled ? 'Mute microphone' : 'Unmute microphone'}
+            className={`px-4 py-2 rounded font-semibold border ${
+              isAudioEnabled ? 'bg-slate-800 border-slate-600 hover:bg-slate-700' : 'bg-red-900 border-red-700 text-red-100'
+            } transition-all`}
           >
-            <svg 
-              className="h-6 w-6" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              {isAudioEnabled ? (
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" 
-                />
-              ) : (
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" 
-                  clipRule="evenodd" 
-                />
-              )}
-            </svg>
+            {isAudioEnabled ? '🎙️ Mic On' : '🔇 Muted'}
           </button>
-          
-          <button
-            onClick={toggleScreenShare}
-            className={`p-2 rounded-full ${
-              isScreenSharing ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
-            } transition-colors`}
-            title={isScreenSharing ? 'Stop sharing screen' : 'Share screen'}
-          >
-            <svg 
-              className="h-6 w-6" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" 
-              />
-            </svg>
-          </button>
+
+          {/* Present Evidence Button */}
+          {['judge', 'lawyer', 'clerk'].includes(currentUser.role) && (
+            <label className="cursor-pointer px-4 py-2 rounded font-semibold bg-green-900 border border-green-700 hover:bg-green-800 transition-all text-green-50">
+              📄 Present Evidence
+              <input type="file" className="hidden" onChange={handleEvidenceUpload} />
+            </label>
+          )}
           
           <button
             onClick={() => setIsChatOpen(!isChatOpen)}
-            className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors"
-            title={isChatOpen ? 'Close chat' : 'Open chat'}
+            className="px-4 py-2 rounded font-semibold bg-blue-900 border border-blue-700 hover:bg-blue-800 transition-all text-blue-50"
           >
-            <svg 
-              className="h-6 w-6" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
-              />
-            </svg>
+            💬 Chat
           </button>
 
           <button
             onClick={leaveMeeting}
-            className="p-2 rounded-full bg-red-600 hover:bg-red-700 transition-colors"
-            title="Leave meeting"
+            className="px-4 py-2 rounded font-bold bg-red-700 border border-red-500 hover:bg-red-600 transition-all text-white shadow-lg"
           >
-            <svg 
-              className="h-6 w-6" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
-              />
-            </svg>
+            Leave Court
           </button>
         </div>
       </header>
 
-      {/* Main content */}
-      <div className="flex-1 flex">
-        {/* Video grid */}
-        <div className={`${isChatOpen ? 'w-3/4' : 'w-full'} bg-black p-4 relative`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
-            {/* Local video */}
-            <div className="relative bg-gray-800 rounded-lg overflow-hidden">
-              <video
-                ref={userVideoRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-white text-sm">
-                You ({currentUser.name})
-              </div>
+      {/* Main content - Courtroom Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Courtroom View */}
+        <div className={`${isChatOpen ? 'w-3/4' : 'w-full'} bg-slate-900 p-6 relative flex flex-col`}>
+          
+          {/* JUDGE'S BENCH (Top Center) */}
+          <div className="flex justify-center mb-8 h-1/3">
+            <div className="relative bg-slate-950 rounded-xl overflow-hidden border-4 border-amber-600 shadow-2xl w-1/3 min-w-[300px]">
+               {currentUser.role === 'judge' ? (
+                 <video ref={userVideoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+               ) : (
+                 <video 
+                   autoPlay playsInline className="w-full h-full object-cover" 
+                   ref={video => {
+                     const judgePeer = peers.find(p => p.role === 'judge');
+                     if (video && judgePeer?.stream) video.srcObject = judgePeer.stream;
+                   }} 
+                 />
+               )}
+               <div className="absolute bottom-0 w-full bg-slate-950 bg-opacity-90 py-2 text-center border-t border-amber-600">
+                 <span className="text-amber-500 font-bold uppercase tracking-widest text-sm">
+                   Hon. Judge {currentUser.role === 'judge' ? currentUser.name : (peers.find(p => p.role === 'judge')?.userName || 'Not Present')}
+                 </span>
+               </div>
+            </div>
+          </div>
+
+          {/* LOWER COURT (Sides: Lawyers, Center: Witness/Evidence) */}
+          <div className="flex-1 flex justify-between gap-6 h-2/3">
+            
+            {/* DEFENSE / PROSECUTION LEFT */}
+            <div className="w-1/4 flex flex-col gap-4">
+              {peers.filter(p => p.role === 'lawyer').slice(0, 2).map((peer, i) => (
+                <div key={`left-${i}`} className="flex-1 relative bg-slate-800 rounded-lg overflow-hidden border-2 border-slate-600 shadow-lg">
+                  <video autoPlay playsInline className="w-full h-full object-cover" ref={v => { if (v && peer.stream) v.srcObject = peer.stream; }} />
+                  <div className="absolute bottom-0 w-full bg-slate-900 py-1 text-center border-t border-slate-700">
+                    <span className="text-slate-300 font-semibold text-xs uppercase">{peer.userName} (Counsel)</span>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Remote videos */}
-            {peers.map((peer, index) => (
-              <div key={index} className="relative bg-gray-800 rounded-lg overflow-hidden">
-                <video
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                  ref={video => {
-                    if (video && peer.stream) {
-                      video.srcObject = peer.stream;
-                    }
-                  }}
-                />
-                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-white text-sm">
-                  {peer.userName || 'Participant'}
+            {/* WITNESS STAND / EVIDENCE DISPLAY CENTER */}
+            <div className="w-1/2 bg-slate-950 rounded-xl border border-slate-800 shadow-inner flex flex-col justify-center items-center relative overflow-hidden">
+                <div className="absolute top-4 left-4 text-slate-500 uppercase tracking-widest text-xs font-bold z-10">Witness Stand / Evidence</div>
+                
+                {presentedEvidence ? (
+                  <div className="w-full h-full flex flex-col bg-slate-900">
+                    <div className="bg-amber-900 text-amber-100 p-2 text-center text-sm font-bold truncate z-10 border-b border-amber-700">
+                      Exhibit: {presentedEvidence.title}
+                    </div>
+                    {presentedEvidence.fileType && presentedEvidence.fileType.startsWith('image/') ? (
+                      <img src={`http://localhost:8000${presentedEvidence.fileUrl}?token=${localStorage.getItem('token')}`} className="flex-1 object-contain p-2" alt="Evidence" />
+                    ) : (
+                      <div className="flex-1 flex flex-col items-center justify-center">
+                        <span className="text-6xl mb-4">📄</span>
+                        <a href={`http://localhost:8000${presentedEvidence.fileUrl}?token=${localStorage.getItem('token')}`} target="_blank" rel="noreferrer" className="text-amber-500 underline text-lg font-bold">
+                          View Document
+                        </a>
+                      </div>
+                    )}
+                    <button onClick={() => setPresentedEvidence(null)} className="absolute top-2 right-2 bg-red-700 hover:bg-red-600 text-white text-xs px-3 py-1 rounded shadow z-20">Close</button>
+                  </div>
+                ) : peers.some(p => p.role === 'witness') ? (
+                  <video 
+                    autoPlay playsInline className="w-full h-full object-contain" 
+                    ref={video => {
+                      const witness = peers.find(p => p.role === 'witness');
+                      if (video && witness?.stream) video.srcObject = witness.stream;
+                    }} 
+                  />
+                ) : currentUser.role === 'witness' ? (
+                  <video ref={userVideoRef} autoPlay muted playsInline className="w-full h-full object-contain" />
+                ) : (
+                  <div className="text-slate-600 flex flex-col items-center">
+                    <span className="text-4xl mb-4">⚖️</span>
+                    <p>No witness on stand</p>
+                  </div>
+                )}
+            </div>
+
+            {/* OTHERS / GALLERY RIGHT */}
+            <div className="w-1/4 flex flex-col gap-4">
+              {/* Local user if not judge/witness */}
+              {['client', 'lawyer', 'clerk', 'admin'].includes(currentUser.role) && (
+                <div className="flex-1 relative bg-slate-800 rounded-lg overflow-hidden border-2 border-blue-900 shadow-lg">
+                  <video ref={userVideoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                  <div className="absolute bottom-0 w-full bg-slate-900 py-1 text-center border-t border-blue-800">
+                    <span className="text-blue-300 font-semibold text-xs uppercase">You ({currentUser.role})</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )}
+              {/* Other peers */}
+              {peers.filter(p => !['judge', 'witness'].includes(p.role) && peers.indexOf(p) > 1).map((peer, i) => (
+                <div key={`right-${i}`} className="flex-1 relative bg-slate-800 rounded-lg overflow-hidden border-2 border-slate-600 shadow-lg">
+                  <video autoPlay playsInline className="w-full h-full object-cover" ref={v => { if (v && peer.stream) v.srcObject = peer.stream; }} />
+                  <div className="absolute bottom-0 w-full bg-slate-900 py-1 text-center border-t border-slate-700">
+                    <span className="text-slate-300 font-semibold text-xs uppercase">{peer.userName}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
           </div>
         </div>
 
-        {/* Chat panel */}
+        {/* Chat / Transcript panel */}
         {isChatOpen && (
-          <div className="w-1/4 bg-gray-800 flex flex-col border-l border-gray-700">
-            <div className="p-4 border-b border-gray-700">
-              <h2 className="text-white font-bold">Chat</h2>
+          <div className="w-1/4 bg-slate-950 flex flex-col border-l border-slate-800">
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+              <h2 className="text-amber-500 font-bold uppercase tracking-wider">Court Record</h2>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Join Requests for Judge/Clerk */}
+            {['judge', 'clerk'].includes(currentUser.role) && joinRequests.length > 0 && (
+              <div className="p-3 bg-blue-900 border-b border-blue-700">
+                <h3 className="text-blue-100 text-xs font-bold mb-2 uppercase">Waiting Room ({joinRequests.length})</h3>
+                {joinRequests.map((req, i) => (
+                  <div key={i} className="flex justify-between items-center bg-slate-800 p-2 rounded mb-1 shadow">
+                    <span className="text-sm truncate mr-2">{req.userName} ({req.role})</span>
+                    <button onClick={() => admitUser(req)} className="bg-green-700 hover:bg-green-600 text-white text-xs px-2 py-1 rounded">Admit</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 font-sans text-sm">
               {messages.map((msg, index) => (
-                <div 
-                  key={index} 
-                  className={`flex flex-col ${
-                    msg.sender.userId === currentUser.id ? 'items-end' : 'items-start'
-                  }`}
-                >
-                  <div 
-                    className={`max-w-xs px-4 py-2 rounded-lg ${
-                      msg.sender.userId === currentUser.id 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-700 text-white'
-                    }`}
-                  >
+                <div key={index} className="flex flex-col">
+                  <span className="text-xs text-amber-600 font-bold mb-1">
+                    {msg.sender.userName} <span className="text-slate-500 font-normal">({new Date(msg.timestamp || Date.now()).toLocaleTimeString()})</span>
+                  </span>
+                  <div className="text-slate-300 leading-relaxed border-l-2 border-slate-700 pl-3">
                     {msg.message}
                   </div>
-                  <span className="text-xs text-gray-400 mt-1">
-                    {msg.sender.userName} • {new Date().toLocaleTimeString()}
-                  </span>
                 </div>
               ))}
               <div ref={chatEndRef} />
             </div>
             
-            <div className="p-4 border-t border-gray-700">
-              <form onSubmit={sendMessage} className="flex">
+            <div className="p-4 border-t border-slate-800 bg-slate-900">
+              <form onSubmit={sendMessage} className="flex gap-2">
                 <input
                   type="text"
                   value={messageInput}
                   onChange={e => setMessageInput(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-gray-700 text-white rounded-l px-4 py-2 focus:outline-none"
+                  placeholder="Enter statement for the record..."
+                  className="flex-1 bg-slate-800 border border-slate-700 text-white rounded px-3 py-2 focus:outline-none focus:border-amber-500 font-sans"
                 />
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700 transition-colors"
+                  className="bg-amber-700 text-white font-bold px-4 py-2 rounded hover:bg-amber-600 transition-colors shadow"
                 >
-                  Send
+                  Submit
                 </button>
               </form>
             </div>
