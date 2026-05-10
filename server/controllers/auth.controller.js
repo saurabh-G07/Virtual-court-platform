@@ -38,8 +38,18 @@ exports.register = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error during registration' });
+    console.error('DETAILED REGISTRATION ERROR:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      errors: error.errors // Sequelize validation errors
+    });
+    
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ message: 'This email is already registered.' });
+    }
+    
+    res.status(500).json({ message: 'Registration failed: ' + error.message });
   }
 };
 
