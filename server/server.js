@@ -41,13 +41,18 @@ db.authenticate()
     require('./models/evidence.model');
     require('./models/auditLog.model');
     
-    return db.sync({ alter: true }); // alter: true will update existing tables without dropping them
+    return db.sync({ alter: true });
   })
   .then(() => {
-    console.log('Database synchronized successfully.');
+    console.log('DATABASE SYNC SUCCESS: All tables are ready.');
   })
   .catch(err => {
-    console.error('Unable to connect to the database:', err);
+    console.error('DATABASE CRITICAL ERROR:', {
+      message: err.message,
+      name: err.name,
+      stack: err.stack
+    });
+    process.exit(1); // Force Render to show the failure in logs
   });
 
 // Start server
