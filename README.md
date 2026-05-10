@@ -48,6 +48,72 @@ Our platform adheres to a strict microservice-inspired architecture, decoupling 
 
 ---
 
+## 📁 Project Structure
+
+```text
+├── client/                 # React Frontend
+│   ├── src/
+│   │   ├── components/     # Reusable UI Components
+│   │   ├── layouts/        # Page Layouts (MainLayout)
+│   │   ├── pages/          # View-level components
+│   │   └── theme/          # Custom Slate & Gold design tokens
+├── server/                 # Express Backend & Signal Server
+│   ├── config/             # DB & Environment configuration
+│   ├── controllers/        # Business logic for Auth, Meetings, Evidence
+│   ├── middleware/         # Security Gatekeepers (JWT, Role validation)
+│   ├── models/             # Sequelize Data Models
+│   ├── routes/             # REST API Endpoint definitions
+│   ├── services/           # Crypto & AI (Grok) integrations
+│   └── websocket/          # Socket.io signaling handlers
+├── README.md               # Project documentation
+└── .gitignore              # Dependency & sensitive file exclusion
+```
+
+## 🛣️ API Reference
+
+### Authentication
+* `POST /api/auth/register` - Create user account
+* `POST /api/auth/login` - Authenticate & receive JWT
+
+### Courtroom Management
+* `GET /api/meetings` - Fetch authorized sessions
+* `POST /api/meetings` - Schedule new session (Judge only)
+* `GET /api/meetings/:id` - Detailed session information
+
+### Evidence Vault
+* `POST /api/evidence/upload` - Encrypt & store document
+* `GET /api/evidence/meeting/:id` - List exhibits for a session
+* `GET /api/evidence/view/:id` - Secure, watermarked in-memory view
+
+---
+
+## 🔐 Core Security Workflows
+
+### 🛡️ The "Gatekeeper" Pattern
+Every request for sensitive data (Evidence, Session State) passes through a multi-layer middleware stack:
+1. **JWT Verification**: Validates the user's identity.
+2. **Meeting Guard**: Verifies the user is actually a participant in the requested session.
+3. **Role Validation**: Ensures the action matches the user's privileges (e.g., only a Judge can eject a participant).
+
+### 📄 Secure In-Memory Decryption
+To ensure zero data leakage on the client or server disk:
+1. The Encrypted file is read into a Node.js **Buffer**.
+2. Decryption occurs entirely within RAM using the AES-256-CBC algorithm.
+3. A dynamic watermark is applied to the image/PDF buffer via **Jimp**.
+4. The final processed buffer is streamed directly to the frontend, never touching the local `public` folder.
+
+---
+
+## 💾 Database Entity Overview
+
+The system uses a relational MySQL schema to maintain high data integrity:
+* **Users**: Stores identity and persistent credentials.
+* **Meetings**: The central entity connecting participants, timings, and statuses.
+* **Evidence**: Tracks metadata and encryption hashes for all judicial exhibits.
+* **AuditLogs**: A high-resolution tracking table that records every single system interaction with millisecond precision for forensic analysis.
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
