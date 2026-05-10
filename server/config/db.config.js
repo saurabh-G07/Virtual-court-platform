@@ -5,8 +5,14 @@ dotenv.config();
 
 const sequelize = process.env.DATABASE_URL
   ? new Sequelize(process.env.DATABASE_URL, {
-      dialect: 'mysql',
+      dialect: 'postgres',
       logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false // Required for Render Postgres
+        }
+      }
     })
   : new Sequelize(
       process.env.DB_NAME || 'virtual_court',
@@ -14,8 +20,8 @@ const sequelize = process.env.DATABASE_URL
       process.env.DB_PASSWORD || '12211144',
       {
         host: process.env.DB_HOST || 'localhost',
-        dialect: 'mysql',
-        port: process.env.DB_PORT || 3307,
+        dialect: 'postgres',
+        port: process.env.DB_PORT || 5432,
         logging: process.env.NODE_ENV === 'development' ? console.log : false,
       }
     );
