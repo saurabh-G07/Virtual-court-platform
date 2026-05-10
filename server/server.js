@@ -41,7 +41,7 @@ db.authenticate()
     require('./models/evidence.model');
     require('./models/auditLog.model');
     
-    return db.sync({ alter: true }); // alter: true will update existing tables without dropping them
+    return db.sync({ force: true }); // force: true will recreate tables to fix type conflicts (ENUM -> STRING)
   })
   .then(() => {
     console.log('Database synchronized successfully.');

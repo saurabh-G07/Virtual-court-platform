@@ -37,8 +37,11 @@ const Meeting = sequelize.define('Meeting', {
     }
   },
   status: {
-    type: DataTypes.ENUM('scheduled', 'ongoing', 'completed', 'cancelled'),
-    defaultValue: 'scheduled'
+    type: DataTypes.STRING,
+    defaultValue: 'scheduled',
+    validate: {
+      isIn: [['scheduled', 'ongoing', 'completed', 'cancelled']]
+    }
   },
   isWaitingRoomEnabled: {
     type: DataTypes.BOOLEAN,
