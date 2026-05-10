@@ -34,6 +34,31 @@ The **Virtual Court Platform** is an enterprise-grade, secure, and fully-feature
 
 ---
 
+## 🏛️ Advanced Legal Features
+
+### 🚪 Virtual Waiting Room & Admission Control
+The platform implements a formal "Waiting Room" protocol. When participants (Lawyers, Witnesses) join a session, they are placed in a secure lobby. The **Hon. Judge** or **Court Clerk** has a dedicated management panel to manually **Admit** participants into the live proceedings, ensuring full control over the courtroom environment.
+
+### 🎭 Role-Adaptive UI Layout
+The user interface is not a generic video grid. It dynamically rearranges participants based on their assigned judicial role to mirror a physical courtroom:
+* **The Bench**: The Judge is positioned prominently at the top-center.
+* **The Witness Stand**: The active witness is featured in a centralized focus area.
+* **Counsel Tables**: Lawyers and advocates are positioned at dedicated tables for clear identification.
+
+### 🔄 Real-Time Evidence Synchronization
+When a Lawyer "Presents" evidence, the platform doesn't just share a screen. The specific exhibit is **synchronized across all authorized participants' screens instantly** via Socket.io. This ensures every participant is looking at the same high-resolution, watermarked document simultaneously.
+
+### 📅 Automated Session Lifecycle
+The system intelligently manages the courtroom session states:
+* **Scheduled**: Session is awaiting start.
+* **Ongoing**: Automatically triggered when the first participant is admitted.
+* **Completed**: Triggered when the last participant leaves, automatically initiating the AI summarization process.
+
+### 📜 Live Court Record (Transcript Source)
+The persistent real-time chat is more than a communication tool—it serves as the **Official Court Record**. Every statement submitted is captured as part of the legal transcript, which provides the raw data for the **AI Stenographer** to generate its post-session summary.
+
+---
+
 ## 🏗️ System Architecture
 
 Our platform adheres to a strict microservice-inspired architecture, decoupling the media plane from standard REST operations. 
