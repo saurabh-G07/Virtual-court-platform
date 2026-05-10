@@ -59,7 +59,13 @@ const MeetingRoomPage = () => {
     if (loading || error) return;
     
     // Initialize socket connection
-    socketRef.current = io(`${process.env.REACT_APP_API_URL}/stream`, {
+    const socketUrl = process.env.REACT_APP_API_URL 
+      ? (process.env.REACT_APP_API_URL.startsWith('http') 
+          ? process.env.REACT_APP_API_URL 
+          : `https://${process.env.REACT_APP_API_URL}`)
+      : 'http://localhost:8000';
+
+    socketRef.current = io(`${socketUrl}/stream`, {
       withCredentials: true
     });
     
