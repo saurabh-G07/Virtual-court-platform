@@ -25,8 +25,11 @@ const User = sequelize.define('User', {
     allowNull: false
   },
   role: {
-    type: DataTypes.ENUM('judge', 'lawyer', 'client', 'admin', 'clerk', 'witness'),
-    defaultValue: 'client'
+    type: DataTypes.STRING,
+    defaultValue: 'client',
+    validate: {
+      isIn: [['judge', 'lawyer', 'client', 'admin', 'clerk', 'witness']]
+    }
   },
   profileImage: {
     type: DataTypes.STRING,
