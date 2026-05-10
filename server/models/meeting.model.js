@@ -48,7 +48,7 @@ const Meeting = sequelize.define('Meeting', {
     defaultValue: true
   },
   transcriptText: {
-    type: DataTypes.TEXT('long'),
+    type: DataTypes.TEXT,
     allowNull: true
   },
   caseSummary: {
