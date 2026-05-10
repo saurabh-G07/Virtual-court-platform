@@ -41,6 +41,15 @@ app.use('/api/meetings', meetingRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/evidence', evidenceRoutes);
 
+// Root route for API Status
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    message: 'Virtual Court Platform API - Secure Gateway',
+    timestamp: new Date()
+  });
+});
+
 // Serve uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
